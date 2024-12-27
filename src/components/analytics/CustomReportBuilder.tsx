@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { FileDown, Filter, BarChart2 } from 'lucide-react';
 import { reports } from '../../lib/reports';
+import { useToastStore } from '../../stores/toastStore';
 
 const CustomReportBuilder = () => {
+  const addToast = useToastStore(state => state.addToast);
   const [config, setConfig] = useState({
     startDate: '',
     endDate: '',
@@ -11,26 +13,45 @@ const CustomReportBuilder = () => {
     filters: {}
   });
 
-  const availableMetrics = [
-    { id: 'leads', label: 'Leads' },
-    { id: 'conversion_rate', label: 'Taxa de Conversão' },
-    { id: 'revenue', label: 'Receita' },
-    { id: 'roi', label: 'ROI' }
-  ];
-
-  const handleGenerate = async () => {
+  const handleExport = async (format: 'json' | 'csv' = 'json') => {
     try {
+      if (!config.startDate || !config.endDate) {
+        addToast('Selecione um período para exportar', 'error');
+        return;
+      }
+
+      if (!config.metrics.length) {
+        addToast('Selecione pelo menos uma métrica', 'error');
+        return;
+      }
+
       const data = await reports.generateCustomReport({
         startDate: new Date(config.startDate),
         endDate: new Date(config.endDate),
         metrics: config.metrics,
-        groupBy: config.groupBy || undefined,
-        filters: Object.keys(config.filters).length ? config.filters : undefined
+        groupBy: config.groupBy,
+        filters: config.filters
       });
 
-      console.log(data);
+      const exportedData = await reports.exportData(data, format);
+      const blob = new Blob(
+        [exportedData], 
+        { type: format === 'csv' ? 'text/csv' : 'application/json' }
+      );
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `relatorio-${new Date().toISOString().split('T')[0]}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      addToast('Relatório exportado com sucesso!', 'success');
     } catch (error) {
-      console.error('Error generating report:', error);
+      console.error('Error exporting report:', error);
+      addToast('Erro ao exportar relatório', 'error');
     }
   };
 
@@ -42,15 +63,18 @@ const CustomReportBuilder = () => {
         </h2>
         <div className="flex gap-2">
           <button
-            onClick={handleGenerate}
+            onClick={() => handleExport('json')}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             <BarChart2 className="w-4 h-4" />
             Gerar Relatório
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">
+          <button 
+            onClick={() => handleExport('csv')}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+          >
             <FileDown className="w-4 h-4" />
-            Exportar
+            Exportar CSV
           </button>
         </div>
       </div>
@@ -79,34 +103,6 @@ const CustomReportBuilder = () => {
               onChange={(e) => setConfig({ ...config, endDate: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
             />
-          </div>
-        </div>
-
-        {/* Métricas */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Métricas
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            {availableMetrics.map(metric => (
-              <label
-                key={metric.id}
-                className="flex items-center gap-2 p-2 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300"
-              >
-                <input
-                  type="checkbox"
-                  checked={config.metrics.includes(metric.id)}
-                  onChange={(e) => {
-                    const newMetrics = e.target.checked
-                      ? [...config.metrics, metric.id]
-                      : config.metrics.filter(m => m !== metric.id);
-                    setConfig({ ...config, metrics: newMetrics });
-                  }}
-                  className="text-blue-600 dark:bg-gray-700"
-                />
-                {metric.label}
-              </label>
-            ))}
           </div>
         </div>
 

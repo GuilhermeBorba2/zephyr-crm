@@ -29,46 +29,71 @@ export const reports = {
       const results = await Promise.all(queries);
       const data = results.map((result, index) => ({
         metric: params.metrics[index],
-        data: result.data
+        data: result.data || []
       }));
 
       if (params.groupBy) {
-        return groupReportData(data, params.groupBy);
+        return this.groupReportData(data, params.groupBy);
       }
 
       return data;
     } catch (error) {
       console.error('Error generating report:', error);
-      throw error;
+      throw new Error('Falha ao gerar relatório');
     }
   },
 
-  async exportData(format: 'csv' | 'json', data: any[]) {
+  async exportData(data: any[], format: 'csv' | 'json' = 'json') {
     try {
-      if (format === 'csv') {
-        return convertToCSV(data);
+      if (!data || !Array.isArray(data)) {
+        throw new Error('Dados inválidos para exportação');
       }
+
+      if (format === 'csv') {
+        return this.convertToCSV(data);
+      }
+
       return JSON.stringify(data, null, 2);
     } catch (error) {
       console.error('Error exporting data:', error);
-      throw error;
+      throw new Error('Falha ao exportar dados');
     }
+  },
+
+  groupReportData(data: any[], groupBy: string) {
+    return data.reduce((grouped, item) => {
+      const key = item[groupBy];
+      grouped[key] = grouped[key] || [];
+      grouped[key].push(item);
+      return grouped;
+    }, {});
+  },
+
+  convertToCSV(data: any[]): string {
+    if (!data.length) return '';
+
+    // Get all possible headers from all objects
+    const headers = Array.from(new Set(
+      data.reduce((keys, obj) => {
+        return keys.concat(Object.keys(obj));
+      }, [])
+    ));
+
+    // Create CSV rows
+    const rows = [
+      headers.join(','), // Header row
+      ...data.map(obj => 
+        headers.map(header => {
+          const value = obj[header];
+          // Handle different value types
+          if (value === null || value === undefined) return '';
+          if (typeof value === 'string') return `"${value.replace(/"/g, '""')}"`;
+          if (typeof value === 'object') return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
+          return value;
+        }).join(',')
+      )
+    ];
+
+    return rows.join('\n');
   }
 };
-
-function groupReportData(data: any[], groupBy: string) {
-  return data.reduce((grouped, item) => {
-    const key = item[groupBy];
-    grouped[key] = grouped[key] || [];
-    grouped[key].push(item);
-    return grouped;
-  }, {});
-}
-
-function convertToCSV(data: any[]) {
-  const headers = Object.keys(data[0]);
-  const rows = data.map(item =>
-    headers.map(header => JSON.stringify(item[header])).join(',')
-  );
-  return [headers.join(','), ...rows].join('\n');
-}

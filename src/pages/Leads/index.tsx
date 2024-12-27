@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
+import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { supabase } from '../../lib/supabase';
-import type { Lead } from '../../types/database.types';
+import LeadsKanban from '../../components/leads/LeadsKanban';
 import SearchInput from '../../components/common/SearchInput';
-import LeadTable from '../../components/leads/LeadTable';
 import NewLeadModal from '../../components/modals/NewLeadModal';
-import EditLeadModal from '../../components/modals/EditLeadModal';
+import { useToastStore } from '../../stores/toastStore';
+import { isValidLeadStatus } from '../../constants/leadStatuses';
 
 const LeadsPage = () => {
-  const [leads, setLeads] = useState<Lead[]>([]);
+  const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
-  const [editingLead, setEditingLead] = useState<Lead | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const addToast = useToastStore(state => state.addToast);
 
   useEffect(() => {
     fetchLeads();
@@ -28,63 +29,79 @@ const LeadsPage = () => {
       if (error) throw error;
       setLeads(data || []);
     } catch (error) {
-      console.error('Erro ao buscar leads:', error);
+      console.error('Error fetching leads:', error);
+      addToast('Erro ao carregar leads', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEdit = (lead: Lead) => {
-    setEditingLead(lead);
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over) return;
+
+    const newStatus = over.id as string;
+    if (!isValidLeadStatus(newStatus)) {
+      addToast('Status inválido', 'error');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('leads')
+        .update({ status: newStatus })
+        .eq('id', active.id);
+
+      if (error) throw error;
+
+      setLeads(leads.map(lead => 
+        lead.id === active.id ? { ...lead, status: newStatus } : lead
+      ));
+      
+      addToast('Lead atualizado com sucesso!', 'success');
+    } catch (error) {
+      console.error('Error updating lead:', error);
+      addToast('Erro ao atualizar lead', 'error');
+    }
   };
 
-  const filteredLeads = leads.filter(lead => 
+  const filteredLeads = leads.filter(lead =>
     lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.company.toLowerCase().includes(searchTerm.toLowerCase())
+    lead.company?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Leads</h1>
-        <button 
-          onClick={() => setIsNewModalOpen(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+          Leads
+        </h1>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           <Plus className="w-4 h-4" />
-          Adicionar Lead
+          Novo Lead
         </button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <SearchInput
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder="Pesquisar leads..."
-          />
-        </div>
-
-        <div className="overflow-x-auto">
-          <LeadTable 
-            leads={filteredLeads}
-            loading={loading}
-            onEdit={handleEdit}
-          />
-        </div>
+      <div className="mb-6">
+        <SearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Pesquisar leads..."
+        />
       </div>
 
-      <NewLeadModal 
-        isOpen={isNewModalOpen}
-        onClose={() => setIsNewModalOpen(false)}
-        onSuccess={fetchLeads}
-      />
+      <DndContext onDragEnd={handleDragEnd}>
+        <LeadsKanban leads={filteredLeads} loading={loading} onRefresh={fetchLeads} />
+      </DndContext>
 
-      <EditLeadModal
-        isOpen={!!editingLead}
-        onClose={() => setEditingLead(null)}
+      <NewLeadModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         onSuccess={fetchLeads}
-        lead={editingLead}
       />
     </div>
   );

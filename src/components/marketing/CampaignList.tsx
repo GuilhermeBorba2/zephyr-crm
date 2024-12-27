@@ -41,7 +41,7 @@ const CampaignList: React.FC<CampaignListProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-gray-100 dark:bg-gray-800 animate-pulse h-48 rounded-lg"></div>
+          <div key={i} className="bg-gray-100 dark:bg-gray-800 animate-pulse h-48 rounded-lg" />
         ))}
       </div>
     );
@@ -58,7 +58,7 @@ const CampaignList: React.FC<CampaignListProps> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {campaigns.map(campaign => (
-        <div key={campaign.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+        <div key={campaign.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               {campaign.name}

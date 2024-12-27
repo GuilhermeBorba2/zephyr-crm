@@ -15,13 +15,20 @@ interface ToastState {
   removeToast: (id: string) => void;
 }
 
+let toastId = 0;
+
 export const useToastStore = create<ToastState>((set) => ({
   toasts: [],
   addToast: (message, type, autoClose = true) =>
     set((state) => ({
       toasts: [
         ...state.toasts,
-        { id: Date.now().toString(), message, type, autoClose },
+        { 
+          id: `toast-${++toastId}`, 
+          message, 
+          type, 
+          autoClose 
+        },
       ],
     })),
   removeToast: (id) =>

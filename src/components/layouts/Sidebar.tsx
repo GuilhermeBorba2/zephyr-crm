@@ -9,7 +9,9 @@ import {
   Briefcase,
   Settings,
   User,
-  LogOut
+  LogOut,
+  ListTodo,
+  Users
 } from 'lucide-react';
 import ThemeToggle from '../theme/ThemeToggle';
 import { useAuthStore } from '../../stores/authStore';
@@ -24,9 +26,11 @@ const Sidebar = () => {
   const addToast = useToastStore(state => state.addToast);
 
   const navItems = [
-    { to: '/comercial', icon: Briefcase, label: 'Comercial e Vendas' },
+    { to: '/comercial', icon: Briefcase, label: 'Comercial' },
+    { to: '/atividades', icon: ListTodo, label: 'Atividades' },
+    { to: '/contatos', icon: Users, label: 'Contatos' },
     { to: '/marketing', icon: Mail, label: 'Marketing' },
-    { to: '/atendimento', icon: HeadphonesIcon, label: 'Atendimento ao Cliente' },
+    { to: '/atendimento', icon: HeadphonesIcon, label: 'Atendimento' },
     { to: '/operacional', icon: Settings, label: 'Operacional' },
     { to: '/relatorios', icon: BarChart3, label: 'Relatórios' },
   ];
@@ -44,47 +48,39 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="bg-white dark:bg-gray-800 h-screen w-60 border-r border-gray-200 dark:border-gray-700 fixed left-0 top-0 flex flex-col">
-      <div className="p-6 flex-1">
-        <div className="flex items-center justify-between mb-8">
-          <AnimatedLogo />
+    <aside className="bg-white dark:bg-gray-800 h-screen w-16 border-r border-gray-200 dark:border-gray-700 fixed left-0 top-0 flex flex-col">
+      <div className="p-3 flex-1">
+        <div className="mb-6">
           <ThemeToggle />
         </div>
 
-        <div className="mb-8 flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-          <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {user?.user_metadata?.name || 'Usuário'}
-          </span>
-        </div>
-        
         <nav className="space-y-2">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                `flex items-center justify-center p-2 rounded-lg transition-colors ${
                   isActive
                     ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                 }`
               }
+              title={item.label}
             >
               <item.icon className="w-5 h-5" />
-              <span className="text-sm font-medium">{item.label}</span>
             </NavLink>
           ))}
         </nav>
       </div>
 
-      <div className="p-6 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-3 border-t border-gray-200 dark:border-gray-700">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+          className="flex items-center justify-center p-2 w-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+          title="Sair"
         >
           <LogOut className="w-5 h-5" />
-          <span className="text-sm font-medium">Sair</span>
         </button>
       </div>
     </aside>

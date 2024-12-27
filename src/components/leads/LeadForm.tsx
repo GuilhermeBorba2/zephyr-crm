@@ -6,7 +6,6 @@ import LeadInfoSection from './form/LeadInfoSection';
 import CorporateInfoSection from './form/CorporateInfoSection';
 import InterestInfoSection from './form/InterestInfoSection';
 import SourceInfoSection from './form/SourceInfoSection';
-import StatusSection from './form/StatusSection';
 
 interface LeadFormProps {
   onSuccess: () => void;
@@ -19,36 +18,29 @@ const LeadForm: React.FC<LeadFormProps> = ({ onSuccess, onCancel, initialData })
   const addToast = useToastStore(state => state.addToast);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    // Basic Info
     name: initialData?.name || '',
     email: initialData?.email || '',
     phone: initialData?.phone || '',
     company: initialData?.company || '',
     position: initialData?.position || '',
-
-    // Corporate Info
     cnpj: initialData?.cnpj || '',
     corporate_name: initialData?.corporate_name || '',
     corporate_email: initialData?.corporate_email || '',
     corporate_phone: initialData?.corporate_phone || '',
     corporate_responsible: initialData?.corporate_responsible || '',
     responsible_position: initialData?.responsible_position || '',
-
-    // Interest Info
     product_interest: initialData?.product_interest || '',
     needs: initialData?.needs || '',
     budget: initialData?.budget || '',
-
-    // Source Info
-    source: initialData?.source || '',
+    source: initialData?.source || 'other',
     campaign: initialData?.campaign || '',
     notes: initialData?.notes || '',
-
-    // Status
-    status: initialData?.status || 'new'
+    service: initialData?.service || 'Consultoria',
+    value: initialData?.value || 0, // Default value of 0
+    status: 'new'
   });
 
-  const handleFieldChange = (field: string, value: string) => {
+  const handleFieldChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -57,16 +49,24 @@ const LeadForm: React.FC<LeadFormProps> = ({ onSuccess, onCancel, initialData })
     setLoading(true);
 
     try {
+      const dataToSave = {
+        ...formData,
+        service: formData.service || 'Consultoria',
+        value: Number(formData.value) || 0, // Ensure value is a number
+        user_id: user?.id
+      };
+
       const { error } = initialData
         ? await supabase
             .from('leads')
-            .update({ ...formData })
+            .update(dataToSave)
             .eq('id', initialData.id)
         : await supabase
             .from('leads')
-            .insert([{ ...formData, user_id: user?.id }]);
+            .insert([dataToSave]);
 
       if (error) throw error;
+      
       onSuccess();
       addToast(initialData ? 'Lead atualizado com sucesso!' : 'Lead criado com sucesso!', 'success');
     } catch (error) {
@@ -97,11 +97,6 @@ const LeadForm: React.FC<LeadFormProps> = ({ onSuccess, onCancel, initialData })
       <SourceInfoSection
         data={formData}
         onChange={handleFieldChange}
-      />
-
-      <StatusSection
-        status={formData.status}
-        onChange={(value) => handleFieldChange('status', value)}
       />
 
       <div className="flex justify-end space-x-4">

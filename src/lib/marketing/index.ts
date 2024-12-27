@@ -36,5 +36,17 @@ export const marketing = {
       console.error('Error fetching campaigns:', error);
       throw error;
     }
+  },
+
+  async generateReport() {
+    try {
+      const campaigns = await this.getCampaigns();
+      // Aqui você pode implementar a lógica de geração do relatório
+      // Por exemplo, usando uma biblioteca como jsPDF
+      return JSON.stringify(campaigns, null, 2);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      throw error;
+    }
   }
 };

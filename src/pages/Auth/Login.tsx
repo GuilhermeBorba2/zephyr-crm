@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, MessageSquare } from 'lucide-react';
+import { Mail, Lock } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import Input from '../../components/common/Input';
 import { useToastStore } from '../../stores/toastStore';
 import AnimatedLogo from '../../components/common/AnimatedLogo';
-import NewSupportTicketModal from '../../components/modals/NewSupportTicketModal';
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const setUser = useAuthStore(state => state.setUser);
   const addToast = useToastStore(state => state.addToast);
   const [loading, setLoading] = useState(false);
-  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -110,28 +108,9 @@ const LoginPage = () => {
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
-
-            <div className="mt-6">
-              <button
-                type="button"
-                onClick={() => setIsTicketModalOpen(true)}
-                className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
-              >
-                <MessageSquare className="w-4 h-4" />
-                Abrir Chamado de Suporte
-              </button>
-            </div>
           </form>
         </div>
       </div>
-
-      <NewSupportTicketModal
-        isOpen={isTicketModalOpen}
-        onClose={() => setIsTicketModalOpen(false)}
-        onSuccess={() => {
-          addToast('Chamado criado com sucesso! Em breve entraremos em contato.', 'success');
-        }}
-      />
     </div>
   );
 };

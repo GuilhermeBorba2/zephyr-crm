@@ -1,22 +1,18 @@
 import { supabase } from '../supabase';
 
 export const revenueAnalytics = {
-  async getData() {
+  // ... existing methods ...
+
+  async getOpportunitiesData() {
     try {
       const { data: opportunities } = await supabase
         .from('opportunities')
-        .select('potential_value, expected_closing_date')
-        .eq('status', 'won')
-        .order('expected_closing_date');
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      if (!opportunities?.length) return [];
-
-      return opportunities.map(opp => ({
-        date: new Date(opp.expected_closing_date).toLocaleDateString(),
-        value: opp.potential_value
-      }));
+      return opportunities || [];
     } catch (error) {
-      console.error('Error getting revenue data:', error);
+      console.error('Error getting opportunities data:', error);
       return [];
     }
   }

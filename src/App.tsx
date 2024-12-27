@@ -7,6 +7,8 @@ import LoginPage from './pages/Auth/Login';
 import RegisterPage from './pages/Auth/Register';
 import ForgotPasswordPage from './pages/Auth/ForgotPassword';
 import LeadsPage from './pages/Leads';
+import ActivitiesPage from './pages/Activities';
+import ContactsPage from './pages/Contacts';
 import OpportunitiesPage from './pages/Opportunities';
 import ClientsPage from './pages/Clients';
 import MarketingPage from './pages/Marketing';
@@ -48,6 +50,8 @@ function App() {
           >
             <Route index element={<Navigate to="/comercial" replace />} />
             <Route path="comercial" element={<LeadsPage />} />
+            <Route path="atividades" element={<ActivitiesPage />} />
+            <Route path="contatos" element={<ContactsPage />} />
             <Route path="marketing" element={<MarketingPage />} />
             <Route path="atendimento" element={<CustomerServicePage />} />
             <Route path="operacional" element={<ClientsPage />} />

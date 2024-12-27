@@ -1,7 +1,7 @@
 import React from 'react';
 import AdvancedMetrics from '../../components/analytics/AdvancedMetrics';
 import AdvancedDashboard from '../../components/analytics/AdvancedDashboard';
-import CustomReportBuilder from '../../components/analytics/CustomReportBuilder';
+import ReportBuilder from '../../components/analytics/ReportBuilder';
 import ROIDashboard from '../../components/marketing/ROIDashboard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/common/Tabs';
 
@@ -32,7 +32,7 @@ const ReportsPage = () => {
         </TabsContent>
 
         <TabsContent value="custom">
-          <CustomReportBuilder />
+          <ReportBuilder />
         </TabsContent>
       </Tabs>
     </div>
