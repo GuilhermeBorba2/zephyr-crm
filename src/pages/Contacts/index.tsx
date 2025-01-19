@@ -8,7 +8,7 @@ import { useToastStore } from '../../stores/toastStore';
 import { googleContacts } from '../../lib/google/contacts';
 
 const ContactsPage = () => {
-  const [contacts, setContacts] = useState([]);
+  const [contacts, setContacts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,7 +47,7 @@ const ContactsPage = () => {
   const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     contact.organization?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    contact.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (

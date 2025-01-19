@@ -27,3 +27,19 @@ export const LEAD_STATUS_CONFIG = [
 export const isValidLeadStatus = (status: string): status is LeadStatus => {
   return Object.values(LEAD_STATUSES).includes(status as LeadStatus);
 };
+
+type LeadsStatus = "new" | "contacted" | "qualified" | "converted" | "lost";
+
+export interface Lead {
+  id: string;
+  name: string;
+  company?: string;
+  value?: number | string;
+  user_id?: string;
+  source?: "referral" | "campaign" | "organic" | "other";
+  created_at: string;
+  email: string;
+  phone: string;
+  status: LeadsStatus;
+  notes?: string;
+}

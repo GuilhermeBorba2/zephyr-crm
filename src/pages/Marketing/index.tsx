@@ -44,11 +44,11 @@ const MarketingPage = () => {
   const handleExportReport = async () => {
     try {
       const report = await marketing.generateReport();
-      const blob = new Blob([report], { type: 'application/pdf' });
+      const blob = new Blob([atob(report)], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'relatorio-marketing.pdf';
+      a.download = 'marketing_report.pdf';
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

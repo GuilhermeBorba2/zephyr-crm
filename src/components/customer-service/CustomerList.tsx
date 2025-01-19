@@ -4,7 +4,15 @@ import { Mail, Phone, Building2 } from 'lucide-react';
 import SearchInput from '../common/SearchInput';
 
 const CustomerList = () => {
-  const [customers, setCustomers] = useState([]);
+  interface Customer {
+    id: number;
+    name: string;
+    company: string;
+    email: string;
+    phone: string;
+  }
+  
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 

@@ -3,35 +3,36 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Building2, DollarSign, Tag, User } from 'lucide-react';
 import EditLeadModal from '../modals/EditLeadModal';
+import { Lead } from '../../constants/leadStatuses';
 import { useCardCustomizationStore } from '../../stores/cardCustomizationStore';
 
-const LeadCard = ({ lead, onRefresh }) => {
+
+
+const LeadCard: React.FC<{ lead: Lead; onRefresh: () => void }> = ({ lead, onRefresh }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const visibleFields = useCardCustomizationStore(state => state.visibleFields);
-  
+  const visibleFields = useCardCustomizationStore((state) => state.visibleFields);
+
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
-    transition,
-    isDragging
-  } = useSortable({ 
+    isDragging,
+  } = useSortable({
     id: lead.id,
-    data: { ...lead }
+    data: { ...lead },
   });
 
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
     opacity: isDragging ? 0.6 : 1,
     cursor: isDragging ? 'grabbing' : 'grab',
     zIndex: isDragging ? 1 : 0,
-    position: 'relative'
+    position: 'relative',
   };
 
-  // Ensure value is a number
-  const leadValue = typeof lead.value === 'string' ? parseFloat(lead.value) : (lead.value || 0);
+  const leadValue = typeof lead.value === 'string' ? parseFloat(lead.value) : lead.value || 0;
 
   const renderField = (field: string) => {
     switch (field) {
@@ -92,10 +93,8 @@ const LeadCard = ({ lead, onRefresh }) => {
         </div>
 
         <div className="space-y-2">
-          {visibleFields.map(field => (
-            <React.Fragment key={field}>
-              {renderField(field)}
-            </React.Fragment>
+          {visibleFields.map((field) => (
+            <React.Fragment key={field}>{renderField(field)}</React.Fragment>
           ))}
         </div>
       </div>
@@ -107,7 +106,15 @@ const LeadCard = ({ lead, onRefresh }) => {
           setIsModalOpen(false);
           onRefresh();
         }}
-        lead={lead}
+        lead={{
+          ...lead,
+          phone: lead.phone || '',
+          status: lead.status || 'new',
+          notes: lead.notes || '',
+          company: lead.company || '',
+          source: lead.source || 'other',
+          user_id: lead.user_id || '',
+        }}
       />
     </>
   );

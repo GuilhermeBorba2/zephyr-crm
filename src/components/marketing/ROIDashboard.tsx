@@ -3,8 +3,24 @@ import { DollarSign, TrendingUp, Users, Target } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
+interface CampaignROI {
+  name: string;
+  roi: number;
+  revenue: number;
+  investment: number;
+}
+
+interface Metrics {
+  totalInvestment: number;
+  totalRevenue: number;
+  roi: number;
+  conversionRate: number;
+  historicalData: { date: string; investment: number; revenue: number; roi: number }[];
+  campaignROI: CampaignROI[];
+}
+
 const ROIDashboard: React.FC = () => {
-  const [metrics, setMetrics] = useState({
+  const [metrics, setMetrics] = useState<Metrics>({
     totalInvestment: 0,
     totalRevenue: 0,
     roi: 0,

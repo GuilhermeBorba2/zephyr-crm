@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   DndContext,
+  DragStartEvent,
   DragEndEvent,
   DragOverlay,
   useSensor,
@@ -25,20 +26,30 @@ const OpportunityKanban: React.FC<OpportunityKanbanProps> = ({ opportunities, lo
   const addToast = useToastStore(state => state.addToast);
   const sensors = useSensors(useSensor(PointerSensor));
 
+  const [activeOpportunity, setActiveOpportunity] = useState<Opportunity | null>(null);
+
   const columns = [
     { id: 'aberta', title: 'Em Aberto', color: 'bg-blue-50 dark:bg-blue-900/20' },
     { id: 'ganha', title: 'Ganhas', color: 'bg-green-50 dark:bg-green-900/20' },
-    { id: 'perdida', title: 'Perdidas', color: 'bg-red-50 dark:bg-red-900/20' }
+    { id: 'perdida', title: 'Perdidas', color: 'bg-red-50 dark:bg-red-900/20' },
   ];
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const opportunityId = String(event.active.id); // Converte o id para string
+    const opportunity = opportunities.find(opp => opp.id === opportunityId);
+    if (opportunity) setActiveOpportunity(opportunity);
+  };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
+    setActiveOpportunity(null);
+
     if (!over) return;
 
-    const opportunityId = active.id as string;
-    const newStatus = over.id as string;
-    
+    const opportunityId = String(active.id); // Converte o id para string
+    const newStatus = over.id as 'open' | 'won' | 'lost';
+
     try {
       const { error } = await supabase
         .from('opportunities')
@@ -60,7 +71,11 @@ const OpportunityKanban: React.FC<OpportunityKanbanProps> = ({ opportunities, lo
   }
 
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {columns.map(column => {
           const columnOpportunities = opportunities.filter(
@@ -85,7 +100,9 @@ const OpportunityKanban: React.FC<OpportunityKanbanProps> = ({ opportunities, lo
       </div>
 
       <DragOverlay>
-        {/* Placeholder para o card sendo arrastado */}
+        {activeOpportunity ? (
+          <OpportunityCard opportunity={activeOpportunity} />
+        ) : null}
       </DragOverlay>
     </DndContext>
   );

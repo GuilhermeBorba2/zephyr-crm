@@ -1,62 +1,123 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar } from 'lucide-react';
 import { useToastStore } from '../../stores/toastStore';
-import { googleApi } from '../../lib/google/api';
+import { supabase } from '../../lib/supabase';
 
-const CalendarSync = () => {
+declare global {
+  interface Window {
+    google: any;
+  }
+}
+
+interface CalendarEvent {
+  id: string;
+  summary: string;
+  start: { dateTime?: string; date?: string };
+  end: { dateTime?: string; date?: string };
+  htmlLink: string;
+}
+
+const CalendarSync = ({ onSync }: { onSync: (events: CalendarEvent[]) => void }) => {
   const [syncing, setSyncing] = useState(false);
   const [apiLoaded, setApiLoaded] = useState(false);
-  const addToast = useToastStore(state => state.addToast);
+  const addToast = useToastStore((state) => state.addToast);
+
+  const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
-    loadGoogleApi();
+    loadGoogleIdentityServices();
   }, []);
 
-  const loadGoogleApi = async () => {
-    try {
-      await googleApi.ensureApiLoaded();
+  const loadGoogleIdentityServices = () => {
+    const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    if (existingScript) {
       setApiLoaded(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => setApiLoaded(true);
+    script.onerror = () => addToast('Erro ao carregar a biblioteca do Google.', 'error');
+    document.body.appendChild(script);
+  };
+
+  const saveEventsToDatabase = async (events: CalendarEvent[]) => {
+    try {
+      const { data, error } = await supabase
+        .from('google_events')
+        .upsert(events.map((event) => ({
+          id: event.id,
+          title: event.summary,
+          start_time: event.start.dateTime || event.start.date,
+          end_time: event.end.dateTime || event.end.date,
+          link: event.htmlLink,
+        })));
+
+      if (error) throw error;
+
+      addToast('Eventos sincronizados e salvos no banco de dados.', 'success');
     } catch (error) {
-      console.error('Error loading Google API:', error);
-      addToast('Erro ao carregar API do Google', 'error');
+      console.error('Erro ao salvar eventos no banco:', error);
+      addToast('Erro ao salvar eventos no banco.', 'error');
     }
   };
 
-  const handleSync = async () => {
+  const handleSync = () => {
     if (!apiLoaded) {
-      addToast('Aguarde o carregamento da API do Google', 'error');
+      addToast('Aguarde o carregamento da API do Google.', 'error');
       return;
     }
 
     setSyncing(true);
-    try {
-      const auth2 = window.gapi.auth2.getAuthInstance();
-      if (!auth2.isSignedIn.get()) {
-        await auth2.signIn();
-      }
+    const tokenClient = window.google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: 'https://www.googleapis.com/auth/calendar.readonly',
+      callback: async (response: any) => {
+        if (response.error) {
+          console.error('Erro ao obter token:', response.error);
+          addToast('Erro ao autenticar no Google.', 'error');
+          setSyncing(false);
+          return;
+        }
 
-      const accessToken = auth2.currentUser.get().getAuthResponse().access_token;
-      
-      // Fetch calendar events
-      const response = await window.gapi.client.calendar.events.list({
-        calendarId: 'primary',
-        timeMin: new Date().toISOString(),
-        maxResults: 10,
-        singleEvents: true,
-        orderBy: 'startTime'
-      });
+        try {
+          const res = await fetch(
+            `https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=10&orderBy=startTime&singleEvents=true&timeMin=${new Date().toISOString()}`,
+            {
+              headers: {
+                Authorization: `Bearer ${response.access_token}`,
+              },
+            }
+          );
 
-      // Process calendar events
-      const events = response.result.items;
-      console.log('Calendar events:', events);
-      
-      addToast('Calendário sincronizado com sucesso!', 'success');
-    } catch (error) {
-      console.error('Error syncing calendar:', error);
-      addToast('Erro ao sincronizar calendário', 'error');
-    } finally {
-      setSyncing(false);
-    }
+          const data = await res.json();
+          if (data.items && data.items.length > 0) {
+            const events = data.items.map((item: any) => ({
+              id: item.id,
+              summary: item.summary,
+              start: item.start,
+              end: item.end,
+              htmlLink: item.htmlLink,
+            }));
+            onSync(events);
+            await saveEventsToDatabase(events); // Salva os eventos no banco
+          } else {
+            addToast('Nenhum evento encontrado no calendário.', 'info');
+          }
+        } catch (error) {
+          console.error('Erro ao sincronizar o calendário:', error);
+          addToast('Erro ao sincronizar o calendário.', 'error');
+        } finally {
+          setSyncing(false);
+        }
+      },
+    });
+
+    tokenClient.requestAccessToken();
   };
 
   return (

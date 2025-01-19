@@ -9,7 +9,7 @@ const SatisfactionDashboard = () => {
     totalResponses: 0,
     nps: 0
   });
-  const [historicalData, setHistoricalData] = useState([]);
+  const [historicalData, setHistoricalData] = useState<{ month: string; satisfaction: number; responses: number; }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

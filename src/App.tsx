@@ -56,6 +56,7 @@ function App() {
             <Route path="atendimento" element={<CustomerServicePage />} />
             <Route path="operacional" element={<ClientsPage />} />
             <Route path="relatorios" element={<ReportsPage />} />
+            <Route path='oportunidades' element={<OpportunitiesPage />} />
           </Route>
         </Routes>
         <Toast />

@@ -33,6 +33,7 @@ const Sidebar = () => {
     { to: '/atendimento', icon: HeadphonesIcon, label: 'Atendimento' },
     { to: '/operacional', icon: Settings, label: 'Operacional' },
     { to: '/relatorios', icon: BarChart3, label: 'Relatórios' },
+    { to: '/oportunidades', icon: Target, label: 'Oportunidades' },
   ];
 
   const handleLogout = async () => {

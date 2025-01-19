@@ -8,7 +8,7 @@ interface EditLeadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  lead: Lead | null;
+  lead: Lead; 
 }
 
 const EditLeadModal: React.FC<EditLeadModalProps> = ({ 

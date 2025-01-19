@@ -25,7 +25,13 @@ export type Opportunity = {
     name: string;
     company: string;
   };
+  project?: {
+    title: string;
+    value: number;
+    start_date: string;
+  };
 };
+
 
 export type Client = {
   id: string;

@@ -69,5 +69,17 @@ export const marketing = {
       console.error('Error fetching campaigns:', error);
       throw error;
     }
-  }
+  },
+  async generateReport(): Promise<string> {
+    try {
+        const { data, error } = await supabase.rpc('generate_marketing_report');
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error('Error generating marketing report:', error);
+        throw error;
+    }
+}
+
+
 };

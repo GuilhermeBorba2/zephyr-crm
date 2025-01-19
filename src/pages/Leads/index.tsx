@@ -9,7 +9,7 @@ import { useToastStore } from '../../stores/toastStore';
 import { isValidLeadStatus } from '../../constants/leadStatuses';
 
 const LeadsPage = () => {
-  const [leads, setLeads] = useState([]);
+  const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
