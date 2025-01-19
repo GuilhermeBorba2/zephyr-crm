@@ -11,7 +11,6 @@ export const LEAD_STATUSES = {
 } as const;
 
 export type LeadStatus = typeof LEAD_STATUSES[keyof typeof LEAD_STATUSES];
-
 export const LEAD_STATUS_CONFIG = [
   { id: LEAD_STATUSES.NEW, title: 'Novo Lead', color: 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800' },
   { id: LEAD_STATUSES.CONTACTED, title: 'Contatado', color: 'border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20' },
